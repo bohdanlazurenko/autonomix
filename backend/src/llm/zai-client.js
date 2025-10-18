@@ -21,7 +21,7 @@ export class ZAIClient {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
-        timeout: 120000 // 2 минуты для генерации кода
+        timeout: 8000 // 8 секунд для швидкої генерації
       });
     }
   }
@@ -77,7 +77,8 @@ Make it visually appealing and production-ready.`;
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 8000, // Больше токенов для полного кода
+        max_tokens: 4000, // Оптимізовано для швидкості
+        stream: false
       });
 
       const generatedCode = response.data.choices[0].message.content;
