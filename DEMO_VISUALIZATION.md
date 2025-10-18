@@ -38,7 +38,7 @@
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                 Backend API (Express.js)                        │
-│                 http://localhost:3001                           │
+│                 http://localhost:3002                           │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐ │
 │  │  Routes:                                                  │ │
@@ -323,7 +323,7 @@ make bootstrap
 # Терминал 1: Backend
 cd backend
 npm run dev
-# Backend: http://localhost:3001
+# Backend: http://localhost:3002
 
 # Терминал 2: UI
 cd ui

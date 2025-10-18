@@ -24,7 +24,7 @@
 
 ```bash
 # 1. Создать tenant
-curl -X POST http://localhost:3001/api/tenants \
+curl -X POST http://localhost:3002/api/tenants \
   -H "Content-Type: application/json" \
   -d '{
     "id": "coffee-shop-landing",
@@ -32,7 +32,7 @@ curl -X POST http://localhost:3001/api/tenants \
   }'
 
 # 2. Создать задачу
-curl -X POST http://localhost:3001/api/tasks \
+curl -X POST http://localhost:3002/api/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "tenant": "coffee-shop-landing",
@@ -46,10 +46,10 @@ curl -X POST http://localhost:3001/api/tasks \
 }
 
 # 3. Проверить статус
-curl http://localhost:3001/api/tasks/abc-123-def
+curl http://localhost:3002/api/tasks/abc-123-def
 
 # 4. После completion - задеплоить
-curl -X POST http://localhost:3001/api/tenants/coffee-shop-landing/deploy \
+curl -X POST http://localhost:3002/api/tenants/coffee-shop-landing/deploy \
   -H "Content-Type: application/json" \
   -d '{
     "files": [...]
@@ -205,13 +205,13 @@ await client.domains.add({
 
 ```bash
 # Проверить health backend
-curl http://localhost:3001/health
+curl http://localhost:3002/health
 
 # Список всех deployments
-curl http://localhost:3001/api/tenants
+curl http://localhost:3002/api/tenants
 
 # Детали конкретного tenant
-curl http://localhost:3001/api/tenants/my-app
+curl http://localhost:3002/api/tenants/my-app
 
 # Ответ:
 {
@@ -244,7 +244,7 @@ cd ui
 npm run dev
 
 # Terminal 3: Тестирование
-curl -X POST http://localhost:3001/api/tasks \
+curl -X POST http://localhost:3002/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"tenant": "test", "prompt": "test app"}'
 ```
@@ -342,7 +342,7 @@ fi
 
 ```bash
 # Development
-BACKEND_URL=http://localhost:3001 npm run dev
+BACKEND_URL=http://localhost:3002 npm run dev
 
 # Staging
 BACKEND_URL=https://staging.autonomix.app npm run build

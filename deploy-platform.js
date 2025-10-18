@@ -23,7 +23,7 @@ async function deployPlatform() {
     
     // Update UI to use production API
     const productionHtml = uiHtml.replace(
-      'const API_BASE = "http://localhost:3001/api";',
+      'const API_BASE = "http://localhost:3002/api";',
       'const API_BASE = "/api";'
     );
 

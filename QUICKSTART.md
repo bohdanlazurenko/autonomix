@@ -78,7 +78,7 @@ make demo
 ```bash
 cd backend
 npm run dev
-# Backend запустится на http://localhost:3001
+# Backend запустится на http://localhost:3002
 ```
 
 Терминал 2 - UI:
@@ -141,7 +141,7 @@ chmod +x scripts/*.sh
 ### ❌ Backend не стартует
 → Проверьте health:
 ```bash
-curl http://localhost:3001/health
+curl http://localhost:3002/health
 ```
 
 ## Следующие шаги

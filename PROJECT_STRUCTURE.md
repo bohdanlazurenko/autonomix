@@ -210,7 +210,7 @@ autonomix/
      v
 ┌─────────────────────┐
 │ Backend (Express)   │
-│  localhost:3001     │
+│  localhost:3002     │
 └────┬────────────────┘
      │
      ├─> LLM Agents (PM → Research → Dev)

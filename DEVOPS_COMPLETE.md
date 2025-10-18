@@ -88,7 +88,7 @@
 1. ✅ **Локальная разработка**
    ```bash
    make dev
-   # Backend: http://localhost:3001
+   # Backend: http://localhost:3002
    # UI: http://localhost:3000
    ```
 
@@ -251,13 +251,13 @@ autonomix/
 make help
 
 # Проверить health backend
-curl http://localhost:3001/health
+curl http://localhost:3002/health
 
 # Проверить что UI работает
 curl http://localhost:3000
 
 # Создать tenant через API
-curl -X POST http://localhost:3001/api/tenants \
+curl -X POST http://localhost:3002/api/tenants \
   -H "Content-Type: application/json" \
   -d '{"id": "test", "name": "Test"}'
 

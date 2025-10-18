@@ -11,7 +11,7 @@
 **Локальная версия для тестирования:**
 - 🏠 **Test UI:** http://127.0.0.1:8000/test-ui.html
 - 🏠 **Main UI:** http://127.0.0.1:3000/
-- 🔌 **Backend API:** http://localhost:3001/api
+- 🔌 **Backend API:** http://localhost:3002/api
 
 ---
 

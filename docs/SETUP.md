@@ -80,7 +80,7 @@ cd backend && npm run dev
 cd ui && npm run dev
 ```
 
-Откройте http://localhost:3000 для UI и http://localhost:3001/health для backend.
+Откройте http://localhost:3000 для UI и http://localhost:3002/health для backend.
 
 ### 6. Полный демо-цикл
 
@@ -270,7 +270,7 @@ vercel --prod
 ### Problem: Backend can't reach external APIs
 **Solution**: Проверьте переменные окружения:
 ```bash
-curl http://localhost:3001/health
+curl http://localhost:3002/health
 # Должен показать status всех интеграций
 ```
 
