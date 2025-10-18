@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/src/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "ui-simple/index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/src/server.js"
+    },
+    {
+      "src": "/health",
+      "dest": "/backend/src/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/ui-simple/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
