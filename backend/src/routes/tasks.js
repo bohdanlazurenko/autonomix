@@ -181,13 +181,20 @@ async function processTask(taskId) {
 async function generateProjectFiles(prompt) {
   const businessName = extractBusinessName(prompt) || 'Generated App';
   
-  // Try LLM generation first
+  // Try LLM generation with timeout protection
   try {
     const llmClient = getZAIClient();
     
     if (llmClient.enabled) {
-      console.log('[GENERATION] 🤖 Using Z.AI LLM for code generation...');
-      const generatedCode = await llmClient.generateProjectCode(prompt, businessName);
+      console.log('[GENERATION] 🤖 Trying Z.AI LLM for code generation...');
+      
+      // Race between LLM and timeout
+      const llmPromise = llmClient.generateProjectCode(prompt, businessName);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('LLM_TIMEOUT')), 6000) // 6 секунд на LLM
+      );
+      
+      const generatedCode = await Promise.race([llmPromise, timeoutPromise]);
       
       return [
         {
