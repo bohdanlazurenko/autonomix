@@ -1,12 +1,33 @@
 {
   "version": 2,
   "public": true,
-  "buildCommand": "",
-  "outputDirectory": "public",
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "ui-simple/**",
+      "use": "@vercel/static"
+    }
+  ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/ui-simple/$1"
     }
-  ]
+  ],
+  "env": {
+    "GITHUB_TOKEN": "@github_token",
+    "GH_PAT": "@gh_pat",
+    "VERCEL_TOKEN": "@vercel_token",
+    "ZAI_API_KEY": "@zai_api_key",
+    "ZAI_BASE_URL": "https://api.z.ai/api/coding/paas/v4",
+    "ZAI_MODEL": "glm-4.6",
+    "GITHUB_ORG": "bohdanlazurenko"
+  }
 }

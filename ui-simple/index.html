@@ -303,7 +303,12 @@
     </div>
     
     <script>
-        const API_BASE = 'http://localhost:3002/api';
+        // Auto-detect API base URL (production or local)
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3002/api' 
+            : '/api';
+        
+        console.log('Using API base:', API_BASE);
         
         // Generate UUID v4
         function generateUUID() {
