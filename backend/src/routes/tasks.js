@@ -181,7 +181,15 @@ async function processTask(taskId) {
 async function generateProjectFiles(prompt) {
   const businessName = extractBusinessName(prompt) || 'Generated App';
   
-  // Try LLM generation first
+  // Fast mode for Vercel (skip LLM, use templates only)
+  const isFastMode = process.env.VERCEL === '1' || process.env.FAST_MODE === 'true';
+  
+  if (isFastMode) {
+    console.log('[GENERATION] ⚡ Fast mode enabled - using templates only (skip LLM)');
+    return generateTemplateProject(prompt, businessName);
+  }
+  
+  // Try LLM generation first (only in non-fast mode)
   try {
     const llmClient = getZAIClient();
     
@@ -236,6 +244,13 @@ export default function RootLayout({ children }) {
   }
   
   // Fallback: Smart template selection based on prompt keywords
+  return generateTemplateProject(prompt, businessName);
+}
+
+/**
+ * Generate project using templates (fast mode)
+ */
+function generateTemplateProject(prompt, businessName) {
   console.log('[GENERATION] 📋 Using template-based generation...');
   const promptLower = prompt.toLowerCase();
   
