@@ -33,26 +33,21 @@ router.post("/", async (req, res) => {
 
     tasks.set(taskId, task);
 
-    // Process task synchronously and wait for completion
-    console.log(`[TASK ${taskId}] Starting synchronous processing...`);
-    await processTask(taskId);
-    
-    const completedTask = tasks.get(taskId);
-    
-    if (completedTask.status === 'failed') {
-      return res.status(500).json({
-        taskId,
-        status: completedTask.status,
-        error: completedTask.error,
-        message: "Task processing failed",
-      });
-    }
+    // Trigger async processing (don't wait)
+    console.log(`[TASK ${taskId}] Starting async processing...`);
+    processTask(taskId).catch((err) => {
+      console.error(`[TASK ${taskId}] Processing error:`, err);
+      const t = tasks.get(taskId);
+      if (t) {
+        t.status = "failed";
+        t.error = err.message;
+      }
+    });
 
     res.status(201).json({
       taskId,
-      status: completedTask.status,
-      result: completedTask.result,
-      message: "Task completed successfully",
+      status: task.status,
+      message: "Task created and processing started. Poll /api/tasks/:id for status",
     });
   } catch (error) {
     console.error('[TASK] Error:', error);
