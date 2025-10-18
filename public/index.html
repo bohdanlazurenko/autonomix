@@ -237,17 +237,49 @@
             <p>IT Company as a Service - Опишите задачу, получите готовое приложение</p>
         </div>
         
-        <!-- Info banner -->
-        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px;">
-            <h3 style="margin: 0 0 10px 0; font-size: 1.3rem;">🤖 AI-Powered Generation</h3>
-            <p style="margin: 0 0 10px 0; opacity: 0.95; line-height: 1.6;">
-                AutonomiX використовує <strong>Z.AI GLM-4.6</strong> для генерації коду.<br>
-                Створення та деплоймент займає <strong>~10-15 секунд</strong>!
-            </p>
-            <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">
-                💡 LLM генерує код → GitHub створює репо → Vercel деплоїть автоматично
-            </p>
+        <!-- Local vs Production banner -->
+        <div class="card" id="modeBanner" style="margin-bottom: 20px;">
+            <!-- Will be filled by JavaScript based on hostname -->
         </div>
+        
+        <script>
+            // Detect if running locally or on Vercel
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const banner = document.getElementById('modeBanner');
+            
+            if (isLocal) {
+                banner.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                banner.style.color = 'white';
+                banner.innerHTML = `
+                    <h3 style="margin: 0 0 10px 0; font-size: 1.3rem;">✅ Local Mode - Full Features</h3>
+                    <p style="margin: 0 0 10px 0; opacity: 0.95; line-height: 1.6;">
+                        Ви використовуєте <strong>локальну версію</strong> з повним функціоналом!<br>
+                        🤖 Z.AI LLM генерація | 🐙 GitHub | 🚀 Vercel | ⏱️ Без timeout обмежень
+                    </p>
+                    <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">
+                        Процес займає ~47 секунд. Спостерігайте за прогресом нижче.
+                    </p>
+                `;
+            } else {
+                banner.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                banner.style.color = 'white';
+                banner.innerHTML = `
+                    <h3 style="margin: 0 0 10px 0; font-size: 1.3rem;">⚠️ Production Demo - Limited</h3>
+                    <p style="margin: 0 0 10px 0; opacity: 0.95; line-height: 1.6;">
+                        <strong>Vercel має ліміт 10 секунд</strong> для serverless functions.<br>
+                        Повний процес (LLM + GitHub + Vercel) займає ~47 секунд.
+                    </p>
+                    <p style="margin: 0; font-weight: bold; font-size: 1.1rem;">
+                        ✅ Для повного функціоналу запустіть локально:
+                    </p>
+                    <pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-top: 10px; overflow-x: auto; font-size: 0.9rem;">
+git clone https://github.com/bohdanlazurenko/autonomix.git
+cd autonomix
+./start-local.sh
+# Відкрийте http://localhost:30002</pre>
+                `;
+            }
+        </script>
         
         <div class="card">
             <form id="taskForm">
