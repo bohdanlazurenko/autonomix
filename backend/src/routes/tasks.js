@@ -8,7 +8,7 @@ const router = express.Router();
 const tasks = new Map();
 
 /**
- * Create a new task
+ * Create and deploy synchronously (for Vercel with longer timeout)
  * POST /api/tasks
  */
 router.post("/", async (req, res) => {
@@ -33,22 +33,29 @@ router.post("/", async (req, res) => {
 
     tasks.set(taskId, task);
 
-    // Trigger async processing (in real scenario)
-    processTask(taskId).catch((err) => {
-      console.error(`Task ${taskId} processing error:`, err);
-      const t = tasks.get(taskId);
-      if (t) {
-        t.status = "failed";
-        t.error = err.message;
-      }
-    });
+    // Process task synchronously and wait for completion
+    console.log(`[TASK ${taskId}] Starting synchronous processing...`);
+    await processTask(taskId);
+    
+    const completedTask = tasks.get(taskId);
+    
+    if (completedTask.status === 'failed') {
+      return res.status(500).json({
+        taskId,
+        status: completedTask.status,
+        error: completedTask.error,
+        message: "Task processing failed",
+      });
+    }
 
     res.status(201).json({
       taskId,
-      status: task.status,
-      message: "Task created and processing started",
+      status: completedTask.status,
+      result: completedTask.result,
+      message: "Task completed successfully",
     });
   } catch (error) {
+    console.error('[TASK] Error:', error);
     res.status(500).json({ error: { message: error.message } });
   }
 });
@@ -92,25 +99,25 @@ async function processTask(taskId) {
     // Import deployment function
     const { deployForTenant } = await import('@autonomix/integration');
     
-    // Step 1: PM Analysis
+    // Step 1: PM Analysis (fast for Vercel timeout)
     task.status = "pm_analysis";
     task.steps.push({
       name: "PM Analysis",
       status: "in_progress",
       startedAt: new Date().toISOString(),
     });
-    await simulateDelay(1000);
+    await simulateDelay(100); // Reduced from 1000ms
     task.steps[task.steps.length - 1].status = "completed";
     task.steps[task.steps.length - 1].completedAt = new Date().toISOString();
 
-    // Step 2: Research
+    // Step 2: Research (fast for Vercel timeout)
     task.status = "research";
     task.steps.push({
       name: "Research",
       status: "in_progress",
       startedAt: new Date().toISOString(),
     });
-    await simulateDelay(1000);
+    await simulateDelay(100); // Reduced from 1000ms
     task.steps[task.steps.length - 1].status = "completed";
     task.steps[task.steps.length - 1].completedAt = new Date().toISOString();
 
