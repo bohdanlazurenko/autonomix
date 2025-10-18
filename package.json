@@ -13,7 +13,7 @@
     "bootstrap": "make bootstrap",
     "demo": "make demo",
     "dev": "make dev",
-    "build": "make ui && make backend",
+    "build": "echo 'Skipping build - Vercel handles serverless functions automatically'",
     "deploy": "make deploy",
     "clean": "make clean"
   },
