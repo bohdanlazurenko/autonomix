@@ -1,0 +1,33 @@
+{
+  "name": "autonomix",
+  "version": "1.0.0",
+  "description": "IT Company as a Service - Hackathon Project",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "ui",
+    "integration",
+    "scripts"
+  ],
+  "scripts": {
+    "bootstrap": "make bootstrap",
+    "demo": "make demo",
+    "dev": "make dev",
+    "build": "make ui && make backend",
+    "deploy": "make deploy",
+    "clean": "make clean"
+  },
+  "keywords": [
+    "automation",
+    "devops",
+    "vercel",
+    "github",
+    "ai"
+  ],
+  "author": "AutonomiX Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
