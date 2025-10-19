@@ -429,11 +429,14 @@ cd autonomix
                 if (completedTask && completedTask.status === 'completed') {
                     if (completedTask.result && completedTask.result.repoUrl) {
                         // Deployment успешен
+                        const deployUrl = completedTask.result.deployUrl;
+                        const fullDeployUrl = deployUrl.startsWith('http') ? deployUrl : `https://${deployUrl}`;
+                        
                         resultContainer.className = 'result success';
                         resultContainer.innerHTML = `
                             <h3>✅ Приложение успешно создано и развернуто!</h3>
                             <p><strong>GitHub:</strong> <a href="${completedTask.result.repoUrl}" target="_blank">${completedTask.result.repoUrl}</a></p>
-                            <p><strong>Vercel:</strong> <a href="https://${completedTask.result.deployUrl}" target="_blank">https://${completedTask.result.deployUrl}</a></p>
+                            <p><strong>Vercel:</strong> <a href="${fullDeployUrl}" target="_blank">${fullDeployUrl}</a></p>
                             <p style="margin-top: 15px; color: #666;">
                                 🎉 Приложение развернуто и готово к использованию!
                             </p>
