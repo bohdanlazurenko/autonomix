@@ -422,25 +422,28 @@ cd autonomix
                 const task = await taskResponse.json();
                 console.log('Task created:', task);
                 
-                // 3. Следим за прогрессом
-                await pollTaskProgress(task.taskId);
+                // 3. Следим за прогрессом (включая автоматический deployment)
+                const completedTask = await pollTaskProgress(task.taskId);
                 
-                // 4. После завершения задачи - деплоим (если есть токены)
-                try {
-                    const deployResponse = await fetch(`${API_BASE}/tenants/${tenant.id}/deploy`, {
-                        method: 'POST'
-                    });
-                    
-                    if (deployResponse.ok) {
-                        const deployResult = await deployResponse.json();
-                        showSuccess(deployResult);
+                // 4. Показываем результат
+                if (completedTask && completedTask.status === 'completed') {
+                    if (completedTask.result && completedTask.result.repoUrl) {
+                        // Deployment успешен
+                        resultContainer.className = 'result success';
+                        resultContainer.innerHTML = `
+                            <h3>✅ Приложение успешно создано и развернуто!</h3>
+                            <p><strong>GitHub:</strong> <a href="${completedTask.result.repoUrl}" target="_blank">${completedTask.result.repoUrl}</a></p>
+                            <p><strong>Vercel:</strong> <a href="https://${completedTask.result.deployUrl}" target="_blank">https://${completedTask.result.deployUrl}</a></p>
+                            <p style="margin-top: 15px; color: #666;">
+                                🎉 Приложение развернуто и готово к использованию!
+                            </p>
+                        `;
                     } else {
-                        // Деплой не удался (нет токенов), но задача выполнена
-                        showSuccessWithoutDeploy(task);
+                        // Файлы сгенерированы, но deployment не удался
+                        showSuccessWithoutDeploy(completedTask);
                     }
-                } catch (deployError) {
-                    console.log('Deploy error (expected without tokens):', deployError);
-                    showSuccessWithoutDeploy(task);
+                } else {
+                    showError('Task did not complete successfully');
                 }
                 
             } catch (error) {
@@ -517,43 +520,102 @@ cd autonomix
             `;
         }
         
-        function showSuccessWithoutDeploy(task) {
+        async function showSuccessWithoutDeploy(task) {
             // Получаем финальное состояние задачи
-            fetch(`${API_BASE}/tasks/${task.taskId}`)
-                .then(r => r.json())
-                .then(fullTask => {
-                    resultContainer.className = 'result success';
-                    
-                    if (fullTask.result && fullTask.result.repoUrl) {
-                        // Если есть результат деплоя - показываем его
-                        resultContainer.innerHTML = `
-                            <h3>✅ Приложение успешно создано!</h3>
-                            <p><strong>Статус:</strong> ${fullTask.status}</p>
-                            <p><strong>GitHub:</strong> <a href="${fullTask.result.repoUrl}" target="_blank">${fullTask.result.repoUrl}</a></p>
-                            <p><strong>Vercel:</strong> <a href="${fullTask.result.deployUrl}" target="_blank">${fullTask.result.deployUrl}</a></p>
-                            <p style="margin-top: 15px; color: #666;">
-                                🎉 Приложение развернуто и готово к использованию!
-                            </p>
-                        `;
-                    } else {
-                        // Если нет результата деплоя
-                        resultContainer.innerHTML = `
-                            <h3>✅ Задача успешно выполнена!</h3>
-                            <p><strong>Статус:</strong> ${fullTask.status}</p>
-                            <p style="margin-top: 15px; color: #666;">
-                                Код приложения сгенерирован! <br>
-                                Для реального развертывания необходимо добавить файлы проекта в запрос деплоя.
-                            </p>
-                        `;
-                    }
-                })
-                .catch(err => {
-                    resultContainer.className = 'result success';
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${task.taskId}`);
+                const fullTask = await response.json();
+                
+                resultContainer.className = 'result success';
+                
+                if (fullTask.deploymentResult) {
+                    // Если уже задеплоено - показываем результат
                     resultContainer.innerHTML = `
-                        <h3>✅ Задача завершена!</h3>
-                        <p>Приложение создано успешно.</p>
+                        <h3>✅ Приложение успешно создано и развернуто!</h3>
+                        <p><strong>Статус:</strong> ${fullTask.status}</p>
+                        <p><strong>GitHub:</strong> <a href="${fullTask.deploymentResult.repoUrl}" target="_blank">${fullTask.deploymentResult.repoUrl}</a></p>
+                        <p><strong>Vercel:</strong> <a href="${fullTask.deploymentResult.deployUrl}" target="_blank">${fullTask.deploymentResult.deployUrl}</a></p>
+                        <p style="margin-top: 15px; color: #666;">
+                            🎉 Приложение развернуто и готово к использованию!
+                        </p>
                     `;
+                } else {
+                    // Показываем кнопку Deploy
+                    const filesCount = fullTask.generatedFiles?.length || 0;
+                    resultContainer.innerHTML = `
+                        <h3>✅ Файлы успешно сгенерированы!</h3>
+                        <p><strong>Создано файлов:</strong> ${filesCount}</p>
+                        <div style="margin-top: 20px;">
+                            <button id="deployBtn" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                border: none;
+                                padding: 15px 30px;
+                                font-size: 1.1rem;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-weight: 600;
+                            ">
+                                🚀 Deploy to GitHub + Vercel
+                            </button>
+                        </div>
+                        <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+                            Нажмите кнопку для создания GitHub репозитория и деплоя на Vercel
+                        </p>
+                    `;
+                    
+                    // Добавляем обработчик для кнопки Deploy
+                    document.getElementById('deployBtn').addEventListener('click', async () => {
+                        await deployTask(fullTask.id);
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching task:', err);
+                resultContainer.className = 'result success';
+                resultContainer.innerHTML = `
+                    <h3>✅ Задача завершена!</h3>
+                    <p>Приложение создано успешно.</p>
+                `;
+            }
+        }
+        
+        async function deployTask(taskId) {
+            const deployBtn = document.getElementById('deployBtn');
+            deployBtn.disabled = true;
+            deployBtn.innerHTML = '<span class="spinner"></span> Deploying...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${taskId}/deploy`, {
+                    method: 'POST'
                 });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Deployment failed');
+                }
+                
+                const result = await response.json();
+                
+                resultContainer.innerHTML = `
+                    <h3>✅ Приложение успешно развернуто!</h3>
+                    <p><strong>GitHub:</strong> <a href="${result.repoUrl}" target="_blank">${result.repoUrl}</a></p>
+                    <p><strong>Vercel:</strong> <a href="${result.deployUrl}" target="_blank">${result.deployUrl}</a></p>
+                    <p style="margin-top: 15px; color: #666;">
+                        🎉 Приложение развернуто и готово к использованию!
+                    </p>
+                `;
+                
+            } catch (error) {
+                console.error('Deployment error:', error);
+                deployBtn.disabled = false;
+                deployBtn.innerHTML = '🚀 Deploy to GitHub + Vercel';
+                
+                resultContainer.innerHTML += `
+                    <div style="margin-top: 20px; padding: 15px; background: #ffebee; border-radius: 8px; color: #c62828;">
+                        <strong>❌ Deployment Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
         }
         
         function showError(message) {

@@ -4,6 +4,9 @@
 
 set -e
 
+# Get the root directory
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 echo "🚀 Starting AutonomiX..."
 echo ""
 
@@ -14,7 +17,7 @@ sleep 1
 
 # Start backend
 echo "📦 Starting Backend (http://localhost:3002)..."
-cd "$(dirname "$0")/backend"
+cd "$ROOT_DIR/backend"
 npm run dev > /tmp/autonomix-backend.log 2>&1 &
 BACKEND_PID=$!
 echo "   Backend PID: $BACKEND_PID"
@@ -34,8 +37,8 @@ fi
 # Start UI
 echo ""
 echo "🌐 Starting UI (http://localhost:30002)..."
-cd "$(dirname "$0")/ui-simple"
-python3 -m http.server 30002 > /tmp/autonomix-ui.log 2>&1 &
+cd "$ROOT_DIR/public"
+npx http-server -p 30002 --cors > /tmp/autonomix-ui.log 2>&1 &
 UI_PID=$!
 echo "   UI PID: $UI_PID"
 

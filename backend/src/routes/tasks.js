@@ -72,6 +72,78 @@ router.get("/:id", (req, res) => {
 });
 
 /**
+ * Deploy a completed task to GitHub and Vercel
+ * POST /api/tasks/:id/deploy
+ */
+router.post("/:id/deploy", async (req, res) => {
+  const task = tasks.get(req.params.id);
+
+  if (!task) {
+    return res.status(404).json({
+      error: { message: "Task not found" },
+    });
+  }
+
+  if (task.status !== "completed") {
+    return res.status(400).json({
+      error: { message: "Task must be completed before deployment" },
+    });
+  }
+
+  if (!task.generatedFiles || task.generatedFiles.length === 0) {
+    return res.status(400).json({
+      error: { message: "No generated files to deploy" },
+    });
+  }
+
+  try {
+    const { deployForTenant } = await import('@autonomix/integration');
+    
+    const files = task.generatedFiles.map(f => ({
+      path: f.path,
+      content: f.content
+    }));
+    
+    console.log('[INFO] Deploying task:', task.id);
+    console.log('[DEBUG] Environment variables:');
+    console.log('  GH_PAT:', process.env.GH_PAT ? 'SET' : 'NOT SET');
+    console.log('  GH_ORG:', process.env.GH_ORG || 'NOT SET');
+    console.log('  VERCEL_TOKEN:', process.env.VERCEL_TOKEN ? 'SET' : 'NOT SET');
+    
+    const deployResult = await deployForTenant({
+      tenant: task.tenant,
+      files: files,
+      ghOrg: process.env.GH_ORG || 'bohdanlazurenko',
+      ghPat: process.env.GH_PAT,
+      vercelToken: process.env.VERCEL_TOKEN,
+      vercelOrgId: process.env.VERCEL_ORG_ID,
+    });
+    
+    // Update task with deployment result
+    task.deploymentResult = {
+      repoUrl: deployResult.repoUrl,
+      deployUrl: deployResult.deployUrl,
+      deployedAt: new Date().toISOString()
+    };
+    
+    res.json({
+      success: true,
+      repoUrl: deployResult.repoUrl,
+      deployUrl: deployResult.deployUrl,
+    });
+    
+  } catch (error) {
+    console.error('[ERROR] Deployment failed:', error);
+    res.status(500).json({
+      error: {
+        message: error.message || 'Deployment failed',
+        details: error.toString()
+      }
+    });
+  }
+});
+
+/**
  * List all tasks (for debugging)
  * GET /api/tasks
  */
@@ -139,30 +211,53 @@ async function processTask(taskId) {
       startedAt: new Date().toISOString(),
     });
     
-    // Deploy with real integration
-    console.log('[DEBUG] Environment variables:');
-    console.log('  GH_PAT:', process.env.GH_PAT ? `SET (${process.env.GH_PAT.length} chars)` : 'NOT SET');
-    console.log('  GH_ORG:', process.env.GH_ORG || 'NOT SET');
-    console.log('  VERCEL_TOKEN:', process.env.VERCEL_TOKEN ? `SET (${process.env.VERCEL_TOKEN.length} chars)` : 'NOT SET');
+    console.log('[INFO] Starting automatic deployment...');
     
-    const deployResult = await deployForTenant({
-      tenant: task.tenant,
-      files: files,
-      ghOrg: process.env.GH_ORG || 'bohdanlazurenko',
-      ghPat: process.env.GH_PAT,
-      vercelToken: process.env.VERCEL_TOKEN,
-      vercelOrgId: process.env.VERCEL_ORG_ID,
-    });
-    
-    task.steps[task.steps.length - 1].status = "completed";
-    task.steps[task.steps.length - 1].completedAt = new Date().toISOString();
+    try {
+      const { deployForTenant } = await import('@autonomix/integration');
+      
+      console.log('[DEBUG] Environment variables:');
+      console.log('  GH_PAT:', process.env.GH_PAT ? 'SET' : 'NOT SET');
+      console.log('  GH_ORG:', process.env.GH_ORG || 'NOT SET');
+      console.log('  VERCEL_TOKEN:', process.env.VERCEL_TOKEN ? 'SET' : 'NOT SET');
+      
+      const deployResult = await deployForTenant({
+        tenant: task.tenant,
+        files: task.generatedFiles,
+        ghOrg: process.env.GH_ORG || 'bohdanlazurenko',
+        ghPat: process.env.GH_PAT,
+        vercelToken: process.env.VERCEL_TOKEN,
+        vercelOrgId: process.env.VERCEL_ORG_ID,
+      });
+      
+      console.log('[INFO] ✅ Deployment successful!');
+      
+      task.steps[task.steps.length - 1].status = "completed";
+      task.steps[task.steps.length - 1].completedAt = new Date().toISOString();
 
-    task.status = "completed";
-    task.completedAt = new Date().toISOString();
-    task.result = {
-      repoUrl: deployResult.repoUrl,
-      deployUrl: deployResult.deployUrl,
-    };
+      task.status = "completed";
+      task.completedAt = new Date().toISOString();
+      task.result = {
+        repoUrl: deployResult.repoUrl,
+        deployUrl: deployResult.deployUrl,
+      };
+      
+    } catch (deployError) {
+      console.error('[ERROR] Deployment failed:', deployError);
+      
+      // Mark deployment as failed but task as completed with files
+      task.steps[task.steps.length - 1].status = "failed";
+      task.steps[task.steps.length - 1].completedAt = new Date().toISOString();
+      task.steps[task.steps.length - 1].error = deployError.message;
+
+      task.status = "completed";
+      task.completedAt = new Date().toISOString();
+      task.result = {
+        message: "Files generated successfully, but deployment failed.",
+        filesCount: task.generatedFiles.length,
+        deploymentError: deployError.message
+      };
+    }
   } catch (error) {
     console.error(`Task ${taskId} failed:`, error);
     task.status = "failed";
