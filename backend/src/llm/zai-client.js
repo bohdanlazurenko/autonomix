@@ -34,41 +34,58 @@ export class ZAIClient {
       throw new Error('ZAI client not enabled - API key missing');
     }
 
-    const systemPrompt = `You are an expert Next.js developer. Generate a complete, production-ready Next.js application based on the user's description.
+    const systemPrompt = `You are an expert Next.js developer. Generate a complete, production-ready Next.js application.
+
+CRITICAL: Carefully read the user's description and implement EXACTLY what they ask for.
+- If they mention specific features, include ALL of them
+- If they describe a style, match it precisely  
+- If they name sections, create those exact sections
+- Be creative and unique for each request
+- No two projects should look the same
 
 REQUIREMENTS:
 1. Generate a single page.js file for Next.js 14+ App Router
 2. Use modern React with hooks (functional components only)
 3. Include inline styles (CSS-in-JS) - NO external CSS files
 4. Make it fully responsive and mobile-friendly
-5. Add interactive elements where appropriate
-6. Use modern design: gradients, shadows, smooth animations
-7. Include all necessary sections based on the description
-8. Make it production-ready with proper error handling
+5. Add interactive elements and animations
+6. Use modern design: unique color schemes, gradients, shadows
+7. Include ALL sections and features from the description
+8. Make it production-ready with proper UX
 
 OUTPUT FORMAT:
 Return ONLY valid JavaScript code for page.js file.
-NO markdown, NO explanations, NO comments outside the code.
-Start directly with: export default function Page() {
+NO markdown, NO explanations, NO comments outside code.
+Start directly with: export default function
 
-STYLE GUIDELINES:
-- Use inline styles object for all styling
-- Include hover effects and transitions
-- Make buttons interactive with proper states
-- Use CSS Grid or Flexbox for layouts
-- Add proper spacing and typography
-- Use modern color schemes and gradients`;
+STYLE VARIETY:
+- Vary color schemes based on project type (tech = blue/purple, restaurant = warm colors, portfolio = elegant dark, etc)
+- Change layouts: some hero-centered, some side-by-side, some grid-based
+- Different typography styles for different projects
+- Unique button styles, card designs, spacing
+- Creative hover effects and transitions
+- Match the vibe: modern/minimalist OR playful/colorful OR professional/corporate`;
 
-    const userPrompt = `Generate a Next.js application for: "${prompt}"
+    const userPrompt = `Create a unique Next.js application for:
 
-Business name: "${businessName}"
+"${prompt}"
 
-Generate a complete, styled, interactive single-page application.
-Include ALL sections mentioned in the description.
-Make it visually appealing and production-ready.`;
+Business/Project Name: "${businessName}"
+
+IMPORTANT INSTRUCTIONS:
+1. Read the description carefully - implement EXACTLY what's described
+2. If specific features are mentioned (contact form, gallery, pricing, testimonials, etc) - include them ALL
+3. Make the design match the project type and description
+4. Be creative - make this project look DIFFERENT from others
+5. Include interactive elements relevant to the description
+6. Add proper content that makes sense for this specific project
+7. Make it visually stunning and production-ready
+
+Generate the complete application code now:`;
 
     try {
       console.log('[LLM] Generating code with Z.AI...');
+      console.log('[LLM] Prompt:', prompt);
       
       const response = await this.client.post('/chat/completions', {
         model: this.model,
@@ -76,8 +93,8 @@ Make it visually appealing and production-ready.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 4000, // Оптимізовано для швидкості
+        temperature: 0.8, // Збільшено для більшої креативності
+        max_tokens: 4000,
         stream: false
       });
 
@@ -90,6 +107,7 @@ Make it visually appealing and production-ready.`;
       }
       
       console.log('[LLM] ✅ Code generated successfully');
+      console.log('[LLM] Code length:', cleanCode.length, 'characters');
       return cleanCode;
       
     } catch (error) {
